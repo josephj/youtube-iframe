@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="author" content="">
+<meta name="created" content="2012-07-05">
+<title> Prototype</title>
+<link rel="stylesheet" href="http://yui.yahooapis.com/3.4.1/build/cssreset/reset-min.css">
+<link rel="stylesheet" href="http://yui.yahooapis.com/3.4.1/build/cssfonts/fonts-min.css">
+<style type="text/css">
+
+</style>
+</head>
+<body>
+    <div id="yt" >
+    </div>
+    <div id="controls">
+        <input type="button" value="pause" id="togglePause" />
+        <input type="button" value="resume" />
+        <input type="button" value="stop" id="stop" />
+        <input type="button" value="volume up" id="vup" />
+        <input type="button" value="volume down" id="vdown" />
+        <input type="button" value="mute" />
+        <input type="button" value="unmute" />
+        <input type="button" value="fullscreen" id="toggleFullscreen"/>
+        <input type="button" value="get size" id="size"/>
+        <input type="button" value="get time" id="time"/>
+        <input type="button" value="set time" id="time"/>
+        <input type="button" value="get state" id="state"/>
+        <input type="button" value="play" id="play"/>
+        <input type="button" value="next" id="play"/>
+        <input type="button" value="destroy" id="destroy"/>
+    </div>
+
+    <script type="text/javascript" src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>
+    <script type="text/javascript" src="youtube-iframe.js"></script>
+    <script>
+    YUI().use("youtube-iframe","node-event-delegate", function (Y) {
+        var eventHandler,
+            yt,
+            config,
+            stateCheck;
+
+
+        config       = {
+            "container": "#yt",
+            "url": "http://dl.dropbox.com/u/10258402/GokKUqLcvD8.mp4"
+        };
+        yt          = new Y.YOUTUBE_IFRAME(config);
+        eventHandler = function (event) {
+            var action = event.currentTarget.get("value");
+            switch (action) {
+                case 'pause' :
+                    yt.pause();
+                    break
+                case 'stop' :
+                    yt.stop();
+                    break
+                case 'volume up' :
+                    yt.set("volume",yt.get("volume")+1);
+                    break
+                case 'volume down' :
+                    yt.set("volume",yt.get("volume")-1);
+                    break
+                case 'mute' :
+                    yt.mute();
+                    break;
+                case 'unmute' :
+                    yt.unmute();
+                    break;
+                case 'fullscreen' :
+                    yt.set("fullscreen", true);
+                    Y.log("is fullscreen "+yt.get("fullscreen") );
+                    break
+                case 'get size' :
+                    alert("width:"+yt.get("size")[0]+" height:"+yt.get("size")[1]);
+                    break
+                case 'get time' :
+                    alert("get time: "+yt.get("position")+" total: "+yt.get("duration"));
+                    break
+                case 'get state' :
+                    alert(yt.get("state"));
+                    break
+                case 'play' :
+                    yt.play();
+                    break
+                case 'resume' :
+                    yt.resume();
+                    break
+                case 'destroy' :
+                    yt.destroy();
+                    break
+                case 'next' :
+                    yt.stop();
+                    break
+            }
+        };
+
+        if (yt.get("installed")) {
+            //yt.play("http://www.revolunet.com/static/download/labo/VLCcontrols/bunny.mp4");
+            // yt.play();
+            Y.one("#controls").delegate('click', eventHandler, 'input');
+        }
+        yt.on("buffering", function(e){
+            Y.log("VLC buffering");
+        });
+        yt.on("ready", function(e){
+            Y.log("VLC ready");
+         });
+        yt.on("playing", function(e){
+             Y.log("playing - duration = " + e.duration + "/ position = " + e.position);
+         });
+
+        yt.after("stateChange", function(e){
+            Y.log("State change from "+e.prevVal +" to "+e.newVal );
+        });
+    });
+    </script>
+</body>
+</html>
