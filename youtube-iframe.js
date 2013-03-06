@@ -1,4 +1,4 @@
-/*global window, YUI, document */
+/*global window, YUI, YT, document */
 /**
  * A util for control youtube iframe API.
  *
@@ -8,6 +8,8 @@
 YUI.add("youtube-iframe", function (Y) {
 
     var MODULE_ID = "Y.YOUTUBE_IFRAME",
+        _getParameter,
+        _ytPlayer,
         _log;
 
     _log = function (message, type, module) {
@@ -16,6 +18,20 @@ YUI.add("youtube-iframe", function (Y) {
         Y.log(message, type, module);
     };
 
+    _getParameter = function (url, key) {
+        _log("get vid is executed.");
+        try {
+            var urls, queryString;
+            urls = url.split("?");
+            if (urls.length >= 2) {
+                queryString = Y.QueryString.parse(urls[1]);
+                return queryString[key];
+            }
+        } catch (err) {
+            _log("video-parse error occur " + err.message);
+            Y.fire("video-parser:error");
+        }
+    };
     /**
      * An utility for youtube iframe API control.
      * The following is sample usage.
@@ -47,21 +63,6 @@ YUI.add("youtube-iframe", function (Y) {
         "ended",
         "error"
     ];
-    YOUTUBE_IFRAME.TYPE        = "application/x-vlc-plugin";
-    YOUTUBE_IFRAME.VERSION     = "VideoLAN.VLCPlugin.2";
-    YOUTUBE_IFRAME.CLASS_ID    = "clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921";
-    YOUTUBE_IFRAME.PLUGIN_PAGE = "http://www.videolan.org";
-    YOUTUBE_IFRAME.TEMPLATE = [
-        '<object ',
-        '    id="{id}" width="{width}" height="{height}" {type} >',
-        '    <param name="autoplay" value="no">',
-        '    <param name="autostart" value="no">',
-        '    <param name="bgcolor" value="#000000">',
-        '    <param name="toolbar" value="false">',
-        '    <param name="src" value="">',
-        '    <param name="wmode" value="window">',
-        '</object>'
-    ].join("");
     YOUTUBE_IFRAME.DEFAULT_WIDTH  = "1280px";
     YOUTUBE_IFRAME.DEFAULT_HEIGHT = "700px";
     YOUTUBE_IFRAME.CHECK_RETRY    = 3;
@@ -138,10 +139,10 @@ YUI.add("youtube-iframe", function (Y) {
         "position": {
             value: null,
             getter: function () {
-                return this.get("object").input.time;
+                return this.get("object").getCurrentTime();
             },
             setter: function (value) {
-                this.get("object").input.time = value;
+                this.get("object").seekTo(value);
                 return value;
             },
             validator: Y.Lang.isNumber
@@ -155,7 +156,7 @@ YUI.add("youtube-iframe", function (Y) {
         "duration": {
             value: null,
             getter: function () {
-                return this.get("object").input.length;
+                return this.get("object").getDuration();
             },
             readOnly: true
         },
@@ -167,10 +168,10 @@ YUI.add("youtube-iframe", function (Y) {
         "volume": {
             value: 100,
             getter: function () {
-                return this.get("object").audio.volume;
+                return this.get("object").getVolume();
             },
             setter: function (value) {
-                this.get("object").audio.volume = value;
+                this.get("object").setVolume(value);
             }
         },
         /**
@@ -193,7 +194,6 @@ YUI.add("youtube-iframe", function (Y) {
             value: false,
             validator: Y.Lang.isBoolean,
             setter: function (value) {
-                this.get("object").video.fullscreen = value;
                 return value;
             }
         }
@@ -208,7 +208,10 @@ YUI.add("youtube-iframe", function (Y) {
             var that = this,
                 state;
             _log("_checkState() is executed (" + that._retryCount + ").");
+            /*
             try {
+                debugger;
+                
                 // The following line might fails because VLC is not ready.
                 state = YOUTUBE_IFRAME.STATE[that.get("object").input.state];
                 if (that.get("state") !== state) {
@@ -238,10 +241,11 @@ YUI.add("youtube-iframe", function (Y) {
                 });
                 that._set("state", "error");
                 _log("Retry too many times. Give up!", "error");
-            }
+            }*/
         },
         _poll: function () {
             _log("_poll() is executed.");
+            /*
             var that = this,
                 input = that.get("object").input;
             if (input.length === 0 && input.time === 0) {
@@ -268,12 +272,23 @@ YUI.add("youtube-iframe", function (Y) {
                 that._playTimer = Y.later(YOUTUBE_IFRAME.POLL_INTERVAL, that, that._poll);
                 that._set("state", "playing");
             }
+            */
         },
         _defPlayFn: function () {
             _log("_defPlayFn() is executed");
             var that = this;
             that.fire("ready");
             that._playTimer = Y.later(YOUTUBE_IFRAME.POLL_INTERVAL, that, that._poll, null);
+        },
+        onPlayerReady : function (event) {
+            _log("onPlayerReady() is executed");
+            _ytPlayer.playVideo();
+        },
+        onPlayerStateChange: function (event) {
+            _log("onPlayerStateChange() is executed");
+            _log("state:" + event.target.getPlayerState());
+            var that = this;
+            debugger;
         },
         initializer : function (config) {
             _log("initializer() is executed");
@@ -285,7 +300,7 @@ YUI.add("youtube-iframe", function (Y) {
 
             // Set container.
             container = config.container || "body";
-            container = Y.one(container);
+            //container = Y.one(container);
             that._set("container", container);
 
             // Set Video URL.
@@ -313,39 +328,24 @@ YUI.add("youtube-iframe", function (Y) {
             _log("_create() is executed.");
             var that = this,
                 container = that.get("container"),
-                html,
-                token,
                 size = that.get("size"),
                 width = size[0],
                 height = size[1],
                 id = Y.guid(),
                 node,
                 object = that.get("object") || null;
-
             if (!object) {
-                token = {
-                    id     : id,
-                    width  : width,
-                    height : height,
-                    type   : (Y.UA.gecko) ? "type=" + YOUTUBE_IFRAME.TYPE : ""
-                };
-                html = Y.substitute(YOUTUBE_IFRAME.TEMPLATE, token);
-                container.append(html);
-                object = document.getElementById(id);
-                that._set("object", object);
-                if (Y.UA.ie) {
-                    object.setAttribute("classid", YOUTUBE_IFRAME.CLASS_ID);
-                    object.setAttribute("pluginspage", YOUTUBE_IFRAME.PLUGIN_PAGE);
-                } else {
-                    object.setAttribute("type", YOUTUBE_IFRAME.TYPE);
-                }
-                object.setAttribute("version", YOUTUBE_IFRAME.VERSION);
-            }
-            try {
-                object.playlist.clear();
-                object.playlist.playItem(object.playlist.add(that.get("url")));
-            } catch (e) {
-                Y.log(e.message);
+
+                _ytPlayer = new YT.Player(container, {
+                    height: height,
+                    width: width,
+                    videoId: _getParameter(that.get("url"), "v"),
+                    events: {
+                        "onReady": that.onPlayerReady,
+                        "onStateChange": that.onPlayerStateChange
+                    }
+                });
+                that._set("object", _ytPlayer);
             }
         },
         play: function (url) {
@@ -360,7 +360,9 @@ YUI.add("youtube-iframe", function (Y) {
                 that._set("url", url);
             }
             _log("play() - The video URL is " + url);
-
+            if (_ytPlayer) {
+                _ytPlayer.playVideo();
+            }
             that._create();
             that._retryCount = YOUTUBE_IFRAME.CHECK_RETRY;
             Y.later(YOUTUBE_IFRAME.CHECK_INTERVAL, that, that._checkState);
@@ -369,7 +371,7 @@ YUI.add("youtube-iframe", function (Y) {
             _log("stop() is executed.");
             var that = this,
                 object = that.get("object");
-            object.playlist.stop();
+            object.stopVideo();
             if (that._playTimer) {
                 that._playTimer.cancel();
                 that._playTimer = null;
@@ -385,7 +387,7 @@ YUI.add("youtube-iframe", function (Y) {
                 Y.log("pause() - The player has already been paused.", "warn", MODULE_ID);
                 return;
             }
-            object.playlist.togglePause();
+            object.pauseVideo();
             if (that._playTimer) {
                 that._playTimer.cancel();
                 that._playTimer = null;
@@ -402,7 +404,7 @@ YUI.add("youtube-iframe", function (Y) {
                 _log("resume() - The player isn't paused.");
                 return;
             }
-            object.playlist.togglePause();
+            object.playVideo();
             that._playTimer = Y.later(YOUTUBE_IFRAME.POLL_INTERVAL, that, that._poll);
             that.fire("resume");
             that._set("state", "playing");
@@ -416,18 +418,18 @@ YUI.add("youtube-iframe", function (Y) {
                 Y.log("mute() - The player has already been mute.", "warn", MODULE_ID);
                 return;
             }
-            object.audio.toggleMute();
+            object.mute();
             that._mute = true;
         },
         unmute: function () {
             _log("unmute() is executed.");
             var that = this,
                 object = that.get("object");
-            if (!that._mute) {
+            if (!object.isMuted()) {
                 _log("unmute() - The player isn't mute.");
                 return;
             }
-            object.audio.toggleMute();
+            object.unMute();
             that._mute = false;
         },
         destructor: function () {
@@ -452,6 +454,7 @@ YUI.add("youtube-iframe", function (Y) {
     "requires" : [
         "base",
         "node",
-        "substitute"
+        "substitute",
+        "querystring"
     ]
 });
