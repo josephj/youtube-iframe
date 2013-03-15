@@ -9,7 +9,6 @@ YUI.add("youtube-iframe", function (Y) {
 
     var MODULE_ID = "Y.YOUTUBE_IFRAME",
         _getParameter,
-        _ytPlayer,
         _handleError,
         _handlePlayerReady,
         _handlePlayerStateChange,
@@ -47,9 +46,11 @@ YUI.add("youtube-iframe", function (Y) {
         that._create();
     };
     _handlePlayerReady = function (event) {
+        var that = this;
         _log("onPlayerReady() is executed");
-        if (_ytPlayer) {
-            _ytPlayer.playVideo();
+        if (that.get("object")) {
+            that.get("object").playVideo();
+
         }
     };
         /**
@@ -68,6 +69,8 @@ YUI.add("youtube-iframe", function (Y) {
         if (state === YT.PlayerState.PLAYING) {
             that.fire("playing");         // fire play
             that._set("state", "playing");
+            that.get("object").setPlaybackQuality("highres");
+            console.log(that.get("object").getPlaybackQuality());
         } else if (state === YT.PlayerState.ENDED) {
             that.fire("ended");           // fire ended
             that._set("state", "ended");
@@ -318,10 +321,11 @@ YUI.add("youtube-iframe", function (Y) {
                 height = size[1],
                 id = Y.guid(),
                 node,
+                ytPlayer,
                 object = that.get("object") || null;
             if (!object) {
 
-                _ytPlayer = new YT.Player(container, {
+                ytPlayer = new YT.Player(container, {
                     height: height,
                     width: width,
                     videoId: _getParameter(that.get("url"), "v"),
@@ -331,7 +335,8 @@ YUI.add("youtube-iframe", function (Y) {
                         "onError" : Y.bind(_handleError, that)
                     }
                 });
-                that._set("object", _ytPlayer);
+                //console.log(ytPlayer.getCurrentTime());//.setPlaybackQuality("highres");
+                that._set("object", ytPlayer);
             }
         },
         play: function (url) {
@@ -346,8 +351,8 @@ YUI.add("youtube-iframe", function (Y) {
                 that._set("url", url);
             }
             _log("play() - The video URL is " + url);
-            if (_ytPlayer) {
-                _ytPlayer.playVideo();
+            if (object) {
+                object.playVideo();
             }
             that._create();
         },
