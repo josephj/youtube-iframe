@@ -42,7 +42,7 @@ YUI.add("youtube-iframe", function (Y) {
             message: " error"
         });
         that._set("state", "error");
-        //Y.one("#" + that.get("container")).removeChild(that.get("object"));
+        that.get("container").removeChild(that.get("object"));
         that._create();
     };
     _handlePlayerReady = function (event) {
@@ -50,6 +50,7 @@ YUI.add("youtube-iframe", function (Y) {
         _log("onPlayerReady() is executed");
         if (that.get("object")) {
             that.get("object").playVideo();
+            that._set("object", event.target);
         }
     };
         /**
@@ -69,7 +70,8 @@ YUI.add("youtube-iframe", function (Y) {
             that.fire("playing");         // fire play
             that._set("state", "playing");
             that.get("object").setPlaybackQuality("highres");
-//            console.log(that.get("object").getPlaybackQuality());
+            that._set("object", event.target);
+            //console.log(that.get("object").getPlaybackQuality());
         } else if (state === YT.PlayerState.ENDED) {
             that.fire("ended");           // fire ended
             that._set("state", "ended");
@@ -342,7 +344,6 @@ YUI.add("youtube-iframe", function (Y) {
             var that = this,
                 object = that.get("object");
             url = url || that.get("url");
-            url = "http://www.youtube.com/v/" + _getParameter(url, "v") + "?version=3";
             if (!url) {
                 _log("You must provide either url argument or url attribute.", "error");
             } else {
@@ -350,7 +351,7 @@ YUI.add("youtube-iframe", function (Y) {
             }
             _log("play() - The video URL is " + url);
             if (object) {
-                object.loadVideoByUrl(url);
+                object.loadVideoByUrl("http://www.youtube.com/v/" + _getParameter(url, "v") + "?version=3");
             }
             that._create();
         },
@@ -430,7 +431,6 @@ YUI.add("youtube-iframe", function (Y) {
                     that._playTimer = null;
                 }
             }
-            object.destroy();
             object.parentNode.removeChild(object);
             object = null;
         }
