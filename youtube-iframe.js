@@ -69,7 +69,7 @@ YUI.add("youtube-iframe", function (Y) {
         if (state === YT.PlayerState.PLAYING) {
             that.fire("playing");         // fire play
             that._set("state", "playing");
-            that.get("object").setPlaybackQuality("highres");
+           // that.get("object").setPlaybackQuality("highres");
             that._set("object", event.target);
             //console.log(that.get("object").getPlaybackQuality());
         } else if (state === YT.PlayerState.ENDED) {
@@ -425,13 +425,12 @@ YUI.add("youtube-iframe", function (Y) {
             var that = this,
                 object = that.get("object");
             if (that.get("state") === "playing") {
-                object.destroy();
                 if (that._playTimer) {
                     that._playTimer.cancel();
                     that._playTimer = null;
                 }
             }
-            object.parentNode.removeChild(object);
+            object.destroy();
             object = null;
         }
     });
