@@ -49,8 +49,13 @@ YUI.add("youtube-iframe", function (Y) {
         var that = this;
         _log("onPlayerReady() is executed");
         if (that.get("object")) {
-            that.get("object").playVideo();
+            //that.get("object").playVideo();
             that._set("object", event.target);
+            if (window.android) {
+                window.setTimeout(function () {
+                    window.android.clickForPlayVideo("660", "417");
+                }, 2000);
+            }
         }
     };
         /**
@@ -69,8 +74,11 @@ YUI.add("youtube-iframe", function (Y) {
         if (state === YT.PlayerState.PLAYING) {
             that.fire("playing");         // fire play
             that._set("state", "playing");
-           // that.get("object").setPlaybackQuality("highres");
+           //that.get("object").setPlaybackQuality("highres");
             that._set("object", event.target);
+            if (document.getElementById("focusable-link")) {
+                window.setTimeout(document.getElementById("focusable-link").focus(), 2000);
+            }
             //console.log(that.get("object").getPlaybackQuality());
         } else if (state === YT.PlayerState.ENDED) {
             that.fire("ended");           // fire ended
