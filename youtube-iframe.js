@@ -75,6 +75,8 @@ YUI.add("youtube-iframe", function (Y) {
             that.fire("playing");         // fire play
             that._set("state", "playing");
            //that.get("object").setPlaybackQuality("highres");
+            that._set("resolution", that.get("object").getPlaybackQuality());
+            that._playTimer = Y.later(1000, that, that._poll, null);
             that._set("object", event.target);
             if (document.getElementById("focusable-link")) {
                 window.setTimeout(document.getElementById("focusable-link").focus(), 2000);
@@ -253,6 +255,19 @@ YUI.add("youtube-iframe", function (Y) {
             setter: function (value) {
                 return value;
             }
+        },
+         /**
+         *
+         *
+         * @attribute resolution
+         * @type string
+         */
+        "resolution": {
+            value: "",
+            validator: Y.Lang.isString,
+            setter: function (value) {
+                return value;
+            }
         }
     };
 
@@ -263,10 +278,11 @@ YUI.add("youtube-iframe", function (Y) {
         _poll: function () {
             _log("_poll() is executed.");
             var that = this,
-                object = that.get("object");
-            if (object.get("state") === "buffering") {
+                object = that.get("object"),
+                state = object.getPlayerState();
+            if (state === YT.PlayerState.BUFFERING) {
                 that._playTimer = Y.later(YOUTUBE_IFRAME.POLL_INTERVAL, that, that._poll);
-            } else if (object.get("state") === "ended") {
+            } else if (state ===  YT.PlayerState.ENDED) {
                 _log("ended is executed.");
                 if (that._playTimer) {
                     that._playTimer.cancel();
@@ -275,8 +291,8 @@ YUI.add("youtube-iframe", function (Y) {
                 return;
             } else {
                 that.fire("playing", {
-                    duration: object.getDuration(),
-                    position: object.getCurrentTime()
+                    duration: object.getDuration() * 1000,
+                    position: object.getCurrentTime() * 1000
                 });
                 that._playTimer = Y.later(YOUTUBE_IFRAME.POLL_INTERVAL, that, that._poll);
             }
@@ -336,6 +352,7 @@ YUI.add("youtube-iframe", function (Y) {
                 ytPlayer = new YT.Player(container, {
                     height: height,
                     width: width,
+                    playerVars: { "controls": 0 },
                     videoId: _getParameter(that.get("url"), "v"),
                     events: {
                         "onReady": Y.bind(_handlePlayerReady, that),
