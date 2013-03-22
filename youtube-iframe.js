@@ -21,41 +21,32 @@ YUI.add("youtube-iframe", function (Y) {
     };
     _getParameter = function (url, key) {
         _log("get vid is executed.");
-        try {
-            var urls, queryString;
-            urls = url.split("?");
-            if (urls.length >= 2) {
-                queryString = Y.QueryString.parse(urls[1]);
-                return queryString[key];
-            }
-        } catch (err) {
-            _log("video-parse error occur " + err.message);
-            Y.fire("video-parser:error");
+        var urls, queryString;
+        urls = url.split("?");
+        if (urls.length >= 2) {
+            queryString = Y.QueryString.parse(urls[1]);
+            return queryString[key];
         }
     };
 
-    _handleError = function (event) {
+    _handleError = function (e) {
         var that = this;
         _log("_handleError() is executed");
         that.fire("error", {
-            code: event.data,
+            code: e.data,
             message: " error"
         });
         that._set("state", "error");
-        that.get("container").removeChild(that.get("object"));
+        that.get("container").removeChild(that.get("instance"));
         that._create();
     };
-    _handlePlayerReady = function (event) {
+    _handlePlayerReady = function (e) {
         var that = this;
         _log("onPlayerReady() is executed");
-        if (that.get("object")) {
-            //that.get("object").playVideo();
-            that._set("object", event.target);
-            if (window.android) {
-                window.setTimeout(function () {
-                    window.android.clickForPlayVideo("660", "417");
-                }, 2000);
-            }
+        if (that.get("instance")) {
+            //that.get("instance").playVideo();
+            that._set("instance", e.target);
+            that.fire("ready");
         }
     };
         /**
@@ -67,21 +58,21 @@ YUI.add("youtube-iframe", function (Y) {
         *   3 (buffering)
         *   5 (video cued).
         */
-    _handlePlayerStateChange = function (event) {
+    _handlePlayerStateChange = function (e) {
         var that = this,
-            state = event.target.getPlayerState();
+            state = e.target.getPlayerState();
         _log("onPlayerStateChange() is executed :" + state);
         if (state === YT.PlayerState.PLAYING) {
             that.fire("playing");         // fire play
             that._set("state", "playing");
-           //that.get("object").setPlaybackQuality("highres");
-            that._set("resolution", that.get("object").getPlaybackQuality());
+           //that.get("instance").setPlaybackQuality("highres");
+            that._set("resolution", that.get("instance").getPlaybackQuality());
             that._playTimer = Y.later(1000, that, that._poll, null);
-            that._set("object", event.target);
+            that._set("instance", e.target);
             if (document.getElementById("focusable-link")) {
                 window.setTimeout(document.getElementById("focusable-link").focus(), 2000);
             }
-            //console.log(that.get("object").getPlaybackQuality());
+            //console.log(that.get("instance").getPlaybackQuality());
         } else if (state === YT.PlayerState.ENDED) {
             that.fire("ended");           // fire ended
             that._set("state", "ended");
@@ -102,7 +93,7 @@ YUI.add("youtube-iframe", function (Y) {
      *
      * @constructor
      * @class YOUTUBE_IFRAME
-     * @param {Object} config attribute object
+     * @param {instance} config attribute instance
      */
     function YOUTUBE_IFRAME() {
         YOUTUBE_IFRAME.superclass.constructor.apply(this, arguments);
@@ -128,9 +119,11 @@ YUI.add("youtube-iframe", function (Y) {
     YOUTUBE_IFRAME.CHECK_INTERVAL = 1000;
     YOUTUBE_IFRAME.POLL_INTERVAL  = 1000;
     YOUTUBE_IFRAME.INSTALLED      = true;
+    YOUTUBE_IFRAME.YOUTUBE_URL    = "http://www.youtube.com/v/";
+    YOUTUBE_IFRAME.YOUTUBE_URL_VERSION    = "?version=3";
     YOUTUBE_IFRAME.ATTRS = {
         /**
-         * The container to place object element.
+         * The container to place instance element.
          *
          * @attribute container
          * @type
@@ -140,12 +133,12 @@ YUI.add("youtube-iframe", function (Y) {
             writeOnce: true
         },
         /**
-         * The object element.
+         * The instance element.
          *
-         * @attribute object
+         * @attribute instance
          * @type HTMLElement
          */
-        "object": {
+        "instance": {
             value: null
         },
         /**
@@ -168,7 +161,7 @@ YUI.add("youtube-iframe", function (Y) {
             readOnly: true
         },
         /**
-         * The iframe object is AutoPlay, reserve for develop.
+         * The iframe instance is AutoPlay, reserve for develop.
          *
          * @attribute autoPlay
          * @type Boolean
@@ -178,7 +171,7 @@ YUI.add("youtube-iframe", function (Y) {
             validator: Y.Lang.isBoolean
         },
         /**
-         * The iframe object is installed in browser.
+         * The iframe instance is installed in browser.
          *
          * @attribute installed
          * @type Boolean
@@ -190,7 +183,7 @@ YUI.add("youtube-iframe", function (Y) {
             }
         },
         /**
-         * The iframe input object's position (current playing time in milli second) .
+         * The iframe input instance's position (current playing time in milli second) .
          *
          * @attribute position
          * @type Number
@@ -198,10 +191,10 @@ YUI.add("youtube-iframe", function (Y) {
         "position": {
             value: null,
             getter: function () {
-                return this.get("object").getCurrentTime();
+                return this.get("instance").getCurrentTime();
             },
             setter: function (value) {
-                this.get("object").seekTo(value);
+                this.get("instance").seekTo(value);
                 return value;
             },
             validator: Y.Lang.isNumber
@@ -215,26 +208,26 @@ YUI.add("youtube-iframe", function (Y) {
         "duration": {
             value: null,
             getter: function () {
-                return this.get("object").getDuration();
+                return this.get("instance").getDuration();
             },
             readOnly: true
         },
         /**
-        * the iframe input object's volume .
+        * the iframe input instance's volume .
         * @attribute volume
         * @type number
         */
         "volume": {
             value: 100,
             getter: function () {
-                return this.get("object").getVolume();
+                return this.get("instance").getVolume();
             },
             setter: function (value) {
-                this.get("object").setVolume(value);
+                this.get("instance").setVolume(value);
             }
         },
         /**
-         * The object's size.
+         * The instance's size.
          *
          * @attribute size
          * @type Array
@@ -278,8 +271,8 @@ YUI.add("youtube-iframe", function (Y) {
         _poll: function () {
             _log("_poll() is executed.");
             var that = this,
-                object = that.get("object"),
-                state = object.getPlayerState();
+                instance = that.get("instance"),
+                state = instance.getPlayerState();
             if (state === YT.PlayerState.BUFFERING) {
                 that._playTimer = Y.later(YOUTUBE_IFRAME.POLL_INTERVAL, that, that._poll);
             } else if (state ===  YT.PlayerState.ENDED) {
@@ -291,8 +284,8 @@ YUI.add("youtube-iframe", function (Y) {
                 return;
             } else {
                 that.fire("playing", {
-                    duration: object.getDuration() * 1000,
-                    position: object.getCurrentTime() * 1000
+                    duration: instance.getDuration() * 1000,
+                    position: instance.getCurrentTime() * 1000
                 });
                 that._playTimer = Y.later(YOUTUBE_IFRAME.POLL_INTERVAL, that, that._poll);
             }
@@ -344,11 +337,9 @@ YUI.add("youtube-iframe", function (Y) {
                 size = that.get("size"),
                 width = size[0],
                 height = size[1],
-                id = Y.guid(),
-                node,
                 ytPlayer,
-                object = that.get("object") || null;
-            if (!object) {
+                instance = that.get("instance") || null;
+            if (!instance) {
                 ytPlayer = new YT.Player(container, {
                     height: height,
                     width: width,
@@ -361,13 +352,13 @@ YUI.add("youtube-iframe", function (Y) {
                     }
                 });
                 //console.log(ytPlayer.getCurrentTime());//.setPlaybackQuality("highres");
-                that._set("object", ytPlayer);
+                that._set("instance", ytPlayer);
             }
         },
         play: function (url) {
             _log("play() is executed.");
             var that = this,
-                object = that.get("object");
+                instance = that.get("instance");
             url = url || that.get("url");
             if (!url) {
                 _log("You must provide either url argument or url attribute.", "error");
@@ -375,16 +366,16 @@ YUI.add("youtube-iframe", function (Y) {
                 that._set("url", url);
             }
             _log("play() - The video URL is " + url);
-            if (object) {
-                object.loadVideoByUrl("http://www.youtube.com/v/" + _getParameter(url, "v") + "?version=3");
+            if (instance) {
+                instance.loadVideoByUrl(YOUTUBE_IFRAME.YOUTUBE_URL + _getParameter(url, "v") + YOUTUBE_IFRAME.YOUTUBE_URL_VERSION);
             }
             that._create();
         },
         stop: function () {
             _log("stop() is executed.");
             var that = this,
-                object = that.get("object");
-            object.stopVideo();
+                instance = that.get("instance");
+            instance.stopVideo();
             if (that._playTimer) {
                 that._playTimer.cancel();
                 that._playTimer = null;
@@ -395,12 +386,12 @@ YUI.add("youtube-iframe", function (Y) {
         pause: function () {
             _log("pause() is executed.");
             var that = this,
-                object = that.get("object");
+                instance = that.get("instance");
             if (that._paused) {
                 Y.log("pause() - The player has already been paused.", "warn", MODULE_ID);
                 return;
             }
-            object.pauseVideo();
+            instance.pauseVideo();
             if (that._playTimer) {
                 that._playTimer.cancel();
                 that._playTimer = null;
@@ -412,12 +403,12 @@ YUI.add("youtube-iframe", function (Y) {
         resume: function () {
             _log("resume() is executed.");
             var that = this,
-                object = that.get("object");
+                instance = that.get("instance");
             if (!that._paused) {
                 _log("resume() - The player isn't paused.");
                 return;
             }
-            object.playVideo();
+            instance.playVideo();
             that._playTimer = Y.later(YOUTUBE_IFRAME.POLL_INTERVAL, that, that._poll);
             that.fire("resume");
             that._set("state", "playing");
@@ -426,37 +417,37 @@ YUI.add("youtube-iframe", function (Y) {
         mute: function () {
             _log("mute() is executed.");
             var that = this,
-                object = that.get("object");
+                instance = that.get("instance");
             if (that._paused) {
                 Y.log("mute() - The player has already been mute.", "warn", MODULE_ID);
                 return;
             }
-            object.mute();
+            instance.mute();
             that._mute = true;
         },
         unmute: function () {
             _log("unmute() is executed.");
             var that = this,
-                object = that.get("object");
-            if (!object.isMuted()) {
+                instance = that.get("instance");
+            if (!instance.isMuted()) {
                 _log("unmute() - The player isn't mute.");
                 return;
             }
-            object.unMute();
+            instance.unMute();
             that._mute = false;
         },
         destructor: function () {
             _log("destructor() is executed.");
             var that = this,
-                object = that.get("object");
+                instance = that.get("instance");
             if (that.get("state") === "playing") {
                 if (that._playTimer) {
                     that._playTimer.cancel();
                     that._playTimer = null;
                 }
             }
-            object.destroy();
-            object = null;
+            instance.destroy();
+            instance = null;
         }
     });
     Y.YOUTUBE_IFRAME = YOUTUBE_IFRAME;
