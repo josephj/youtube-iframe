@@ -14,7 +14,7 @@
 
 </head>
 <body>
-    <div id="yt" >
+    <div id="yt">
     </div>
     <div id="controls">
         <input type="button" value="pause" id="togglePause" />
@@ -45,10 +45,12 @@
 
 
         config       = {
-            "container": "yt",
+            "container": "#yt",
+            "size": ["1280px","780px"],
+            "hasControl": true,
             "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
         };
-        yt          = new Y.YOUTUBE_IFRAME(config);
+        yt          = new Y.YoutubeIframe(config);
         eventHandler = function (event) {
             var action = event.currentTarget.get("value");
             switch (action) {
@@ -99,8 +101,6 @@
         };
 
         if (yt.get("installed")) {
-            //yt.play("http://www.revolunet.com/static/download/labo/VLCcontrols/bunny.mp4");
-            // yt.play();
             Y.one("#controls").delegate('click', eventHandler, 'input');
         }
         yt.on("buffering", function(e){

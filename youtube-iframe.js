@@ -86,6 +86,10 @@ YUI.add("youtube-iframe", function (Y) {
             that.fire("buffering");           // fire buffering
             that._set("state", "buffering");
             break;
+        case YT.PlayerState.PAUSED:
+            that.fire("paused");           // fire buffering
+            that._set("state", "paused");
+            break;
         }
     };
 
@@ -111,8 +115,6 @@ YUI.add("youtube-iframe", function (Y) {
      * @property STATE
      */
     YoutubeIframe.STATE = [
-        "idle",
-        "opening",
         "buffering",
         "playing",
         "paused",
@@ -292,21 +294,30 @@ YUI.add("youtube-iframe", function (Y) {
             var that = this,
                 instance = that.get("instance"),
                 state = instance.getPlayerState();
-            if (state === YT.PlayerState.BUFFERING) {
+            switch (state) {
+            case YT.PlayerState.PLAYING:
+                that.fire("playing", {
+                    duration: instance.getDuration() * 1000,
+                    position: instance.getCurrentTime() * 1000
+                });
                 that._playTimer = Y.later(YoutubeIframe.POLL_INTERVAL, that, that._poll);
-            } else if (state ===  YT.PlayerState.ENDED) {
+                break;
+            case YT.PlayerState.ENDED:
                 _log("ended is executed.");
                 if (that._playTimer) {
                     that._playTimer.cancel();
                     that._playTimer = null;
                 }
                 return;
-            } else {
-                that.fire("playing", {
-                    duration: instance.getDuration() * 1000,
-                    position: instance.getCurrentTime() * 1000
-                });
+            case YT.PlayerState.BUFFERING:
                 that._playTimer = Y.later(YoutubeIframe.POLL_INTERVAL, that, that._poll);
+                break;
+            case YT.PlayerState.PAUSED:
+                if (that._playTimer) {
+                    that._playTimer.cancel();
+                    that._playTimer = null;
+                }
+                break;
             }
         },
         initializer : function (config) {
