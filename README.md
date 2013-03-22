@@ -10,10 +10,9 @@ How to use.
 <script type="text/javascript" src="//www.youtube.com/iframe_api"></script>
 ~~~~
 
-2. Sample code
+2. Sample code - config and player.
 
 <pre><code>
-
 var config       = {
     "container": "#yt",  // HTML selector, it can be id, class or html tag name (like body)
     "size": ["1280px","780px"],  //width, height in px
@@ -22,31 +21,24 @@ var config       = {
     "url": "http://www.youtube.com/watch?v=faVCwOesYl8" //youtube url
 };
 var player          = new Y.YoutubeIframe(config);
-
 	</code></pre>
 
-3. Play youtube video
+3. Play youtube video with an existed player.
 
 <pre><code>
-
 player.play("http://www.youtube.com/watch?v=faVCwOesYl8");
-
 	</code></pre>
 
 4. Listen event
 
 <pre><code>
-
 player.on("ready", _handleReady);
-
 player.on("playing", function (e) {
     position: e.position,
     duration: e.duration
 });
-
 player.on("ended", _handleEnded);
 player.on("error", _handleError);
-
 	</code></pre>
 
 Reference: https://developers.google.com/youtube/iframe_api_reference
