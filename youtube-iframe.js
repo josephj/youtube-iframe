@@ -109,7 +109,7 @@ YUI.add("youtube-iframe", function (Y) {
          * @type Boolean
          */
         "autoPlay" : {
-            value: true,
+            value: false,
             validator: Y.Lang.isBoolean
         },
          /**
