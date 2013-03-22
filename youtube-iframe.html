@@ -104,10 +104,10 @@
             Y.one("#controls").delegate('click', eventHandler, 'input');
         }
         yt.on("buffering", function(e){
-            Y.log("VLC buffering");
+            Y.log("Youtube iframe buffering");
         });
         yt.on("ready", function(e){
-            Y.log("VLC ready");
+            Y.log("Youtube iframe ready");
          });
         yt.on("playing", function(e){
              Y.log("playing - duration = " + e.duration + "/ position = " + e.position);

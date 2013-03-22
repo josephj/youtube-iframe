@@ -52,6 +52,9 @@ YUI.add("youtube-iframe", function (Y) {
             //that.get("instance").playVideo();
             that._set("instance", e.target);
             that.fire("ready");
+            if (that.get("autoPlay")) {
+                e.target.playVideo();
+            }
         }
     };
     /**
@@ -176,6 +179,16 @@ YUI.add("youtube-iframe", function (Y) {
             value: true,
             validator: Y.Lang.isBoolean
         },
+         /**
+         * The iframe instance hasControl, reserve for develop.
+         *
+         * @attribute hasControl
+         * @type Boolean
+         */
+        "hasControl" : {
+            value: true,
+            validator: Y.Lang.isBoolean
+        },
         /**
          * The iframe instance is installed in browser.
          *
@@ -257,7 +270,7 @@ YUI.add("youtube-iframe", function (Y) {
         },
          /**
          *
-         *
+         * small, medium, large , hd720, hd1080, highres, default
          * @attribute resolution
          * @type string
          */
@@ -300,14 +313,19 @@ YUI.add("youtube-iframe", function (Y) {
             _log("initializer() is executed");
             var that = this,
                 url,
+                hasControl,
                 container;
 
             config = config || {};
             container = config.container || "body";
+            container = Y.one(container);
             that._set("container", container);
             url = config.url || null;
             that._set("url", url);
-
+            if (config.size) {
+                that._set("size", config.size);
+            }
+            that._set("hasControl", config.hasControl || false);
             that.publish("error", {
                 emitFacade: true
             });
@@ -319,10 +337,7 @@ YUI.add("youtube-iframe", function (Y) {
             that.publish("playing", {
                 emitFacade: true
             });
-
-            if (that.get("autoPlay")) {
-                that.play();
-            }
+            that._create();
         },
         _create: function () {
             _log("_create() is executed.");
@@ -332,12 +347,20 @@ YUI.add("youtube-iframe", function (Y) {
                 width = size[0],
                 height = size[1],
                 ytPlayer,
+                nodeId,
                 instance = that.get("instance") || null;
+
+            if (!container.hasAttribute("id")) {
+                container.setAttribute("id", Y.guid());
+                nodeId =  Y.guid();
+            } else {
+                nodeId = container.getAttribute("id");
+            }
             if (!instance) {
-                ytPlayer = new YT.Player(container, {
+                ytPlayer = new YT.Player(nodeId, {
                     height: height,
                     width: width,
-                    playerVars: { "controls": 0 },
+                    playerVars: { "controls": Number(that.get("hasControl")) },
                     videoId: _getParameter(that.get("url"), "v"),
                     events: {
                         "onReady": Y.bind(_handlePlayerReady, that),
