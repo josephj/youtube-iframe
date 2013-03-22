@@ -9,9 +9,6 @@ YUI.add("youtube-iframe", function (Y) {
 
     var MODULE_ID = "Y.YoutubeIframe",
         _getParameter,
-        _handleError,
-        _handlePlayerReady,
-        _handlePlayerStateChange,
         _log;
 
     _log = function (message, type, module) {
@@ -29,76 +26,11 @@ YUI.add("youtube-iframe", function (Y) {
         }
     };
     /**
-    *   2  The request contains an invalid parameter value.
-    *   5  The requested content cannot be played in an HTML5 player or another error related to the HTML5 player has occurred.
-    *   100  The video requested was not found. 
-    *   101  The owner of the requested video does not allow it to be played in embedded players.
-    *   150  This error is the same as 101. It's just a 101 error in disguise!
-    */
-    _handleError = function (e) {
-        var that = this;
-        _log("_handleError() is executed");
-        that.fire("error", {
-            code: e.data,
-            message: " error"
-        });
-        that._set("state", "error");
-        that.get("container").removeChild(that.get("instance"));
-    };
-    _handlePlayerReady = function (e) {
-        var that = this;
-        _log("_handlePlayerReady() is executed");
-        if (that.get("instance")) {
-            //that.get("instance").playVideo();
-            that._set("instance", e.target);
-            that.fire("ready");
-            if (that.get("autoPlay")) {
-                e.target.playVideo();
-            }
-        }
-    };
-    /**
-    *   youtube player states
-    *   -1 (unstarted)
-    *   0 (ended)
-    *   1 (playing)
-    *   2 (paused)
-    *   3 (buffering)
-    *   5 (video cued).
-    */
-    _handlePlayerStateChange = function (e) {
-        var that = this,
-            state = e.target.getPlayerState();
-        _log("onPlayerStateChange() is executed :" + state);
-        switch (state) {
-        case YT.PlayerState.PLAYING:
-            that.fire("playing");         // fire play
-            that._set("state", "playing");
-            that._set("resolution", that.get("instance").getPlaybackQuality());
-            that._set("instance", e.target);
-            that._playTimer = Y.later(1000, that, that._poll, null);
-            break;
-        case YT.PlayerState.ENDED:
-            that.fire("ended");           // fire ended
-            that._set("state", "ended");
-            break;
-        case YT.PlayerState.BUFFERING:
-            that.fire("buffering");           // fire buffering
-            that._set("state", "buffering");
-            break;
-        case YT.PlayerState.PAUSED:
-            that.fire("paused");           // fire buffering
-            that._set("state", "paused");
-            break;
-        }
-    };
-
-    /**
      * An utility for youtube iframe API control.
      * The following is sample usage.
      *
      *     var vlc = new Y.YoutubeIframe({
-     *         container: "foo"
+     *         container: "#foo"
      *         url: "http://www.youtube.com/watch?v=uA378g_gD1I",
      *     });
      *
@@ -128,8 +60,7 @@ YUI.add("youtube-iframe", function (Y) {
     YoutubeIframe.CHECK_INTERVAL = 1000;
     YoutubeIframe.POLL_INTERVAL  = 1000;
     YoutubeIframe.INSTALLED      = true;
-    YoutubeIframe.YOUTUBE_URL    = "http://www.youtube.com/v/";
-    YoutubeIframe.YOUTUBE_URL_VERSION    = "?version=3";
+    YoutubeIframe.YOUTUBE_URL    = "http://www.youtube.com/v/{vid}?version=3";
     YoutubeIframe.ATTRS = {
         /**
          * The container to place instance element.
@@ -320,6 +251,72 @@ YUI.add("youtube-iframe", function (Y) {
                 break;
             }
         },
+
+         /**
+        *   2  The request contains an invalid parameter value.
+        *   5  The requested content cannot be played in an HTML5 player or another error related to the HTML5 player has occurred.
+        *   100  The video requested was not found. 
+        *   101  The owner of the requested video does not allow it to be played in embedded players.
+        *   150  This error is the same as 101. It's just a 101 error in disguise!
+        */
+        _handleError : function (e) {
+            var that = this;
+            _log("_handleError() is executed");
+            that.fire("error", {
+                code: e.data,
+                message: " error"
+            });
+            that._set("state", "error");
+            that.get("container").removeChild(that.get("instance"));
+        },
+        _handlePlayerReady : function (e) {
+            var that = this;
+            _log("_handlePlayerReady() is executed");
+            if (that.get("instance")) {
+                //that.get("instance").playVideo();
+                that._set("instance", e.target);
+                that.fire("ready");
+                if (that.get("autoPlay")) {
+                    e.target.playVideo();
+                }
+            }
+        },
+        /**
+        *   youtube player states
+        *   -1 (unstarted)
+        *   0 (ended)
+        *   1 (playing)
+        *   2 (paused)
+        *   3 (buffering)
+        *   5 (video cued).
+        */
+        _handlePlayerStateChange : function (e) {
+            var that = this,
+                state = e.target.getPlayerState();
+            _log("onPlayerStateChange() is executed :" + state);
+            switch (state) {
+            case YT.PlayerState.PLAYING:
+                that.fire("playing");         // fire play
+                that._set("state", "playing");
+                that._set("resolution", that.get("instance").getPlaybackQuality());
+                that._set("instance", e.target);
+                that._playTimer = Y.later(1000, that, that._poll, null);
+                break;
+            case YT.PlayerState.ENDED:
+                that.fire("ended");           // fire ended
+                that._set("state", "ended");
+                break;
+            case YT.PlayerState.BUFFERING:
+                that.fire("buffering");           // fire buffering
+                that._set("state", "buffering");
+                break;
+            case YT.PlayerState.PAUSED:
+                that.fire("paused");           // fire buffering
+                that._set("state", "paused");
+                break;
+            }
+        },
+
         initializer : function (config) {
             _log("initializer() is executed");
             var that = this,
@@ -340,11 +337,9 @@ YUI.add("youtube-iframe", function (Y) {
             that.publish("error", {
                 emitFacade: true
             });
-
             that.publish("play", {
                 emitFacade: true
             });
-
             that.publish("playing", {
                 emitFacade: true
             });
@@ -374,9 +369,9 @@ YUI.add("youtube-iframe", function (Y) {
                     playerVars: { "controls": Number(that.get("hasControl")) },
                     videoId: _getParameter(that.get("url"), "v"),
                     events: {
-                        "onReady": Y.bind(_handlePlayerReady, that),
-                        "onStateChange": Y.bind(_handlePlayerStateChange, that),
-                        "onError" : Y.bind(_handleError, that)
+                        "onReady": Y.bind(that._handlePlayerReady, that),
+                        "onStateChange": Y.bind(that._handlePlayerStateChange, that),
+                        "onError" : Y.bind(that._handleError, that)
                     }
                 });
                 //console.log(ytPlayer.getCurrentTime());//.setPlaybackQuality("highres");
@@ -396,7 +391,7 @@ YUI.add("youtube-iframe", function (Y) {
             }
             _log("play() - The video URL is " + url);
             if (instance) {
-                instance.loadVideoByUrl(YoutubeIframe.YOUTUBE_URL + _getParameter(url, "v") + YoutubeIframe.YOUTUBE_URL_VERSION);
+                instance.loadVideoByUrl(Y.Lang.sub(YoutubeIframe.YOUTUBE_URL, {vid: _getParameter(url, "v")}));
             }
             that._create();
         },
@@ -486,7 +481,6 @@ YUI.add("youtube-iframe", function (Y) {
     "requires" : [
         "base",
         "node",
-        "substitute",
         "querystring",
         "oop"
     ]
