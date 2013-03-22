@@ -11,7 +11,9 @@ How to use.
 ~~~~
 
 2. Sample code
+
 <pre><code>
+
 var config       = {
     "container": "#yt",  // HTML selector, it can be id, class or html tag name (like body)
     "size": ["1280px","780px"],  //width, height in px
@@ -20,15 +22,21 @@ var config       = {
     "url": "http://www.youtube.com/watch?v=faVCwOesYl8" //youtube url
 };
 var player          = new Y.YoutubeIframe(config);
+
 	</code></pre>
 
 3. Play youtube video
+
 <pre><code>
+
 player.play("http://www.youtube.com/watch?v=faVCwOesYl8");
+
 	</code></pre>
 
 4. Listen event
+
 <pre><code>
+
 player.on("ready", _handleReady);
 
 player.on("playing", function (e) {
