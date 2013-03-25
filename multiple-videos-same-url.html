@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="author" content="">
+<meta name="created" content="2012-07-05">
+<title> Prototype</title>
+<link rel="stylesheet" href="http://yui.yahooapis.com/3.4.1/build/cssreset/reset-min.css">
+<link rel="stylesheet" href="http://yui.yahooapis.com/3.4.1/build/cssfonts/fonts-min.css">
+<script type="text/javascript" src="http://yui.yahooapis.com/3.7.2/build/yui/yui-min.js"></script>
+<script type="text/javascript" src="youtube-iframe.js"></script>
+<script type="text/javascript" src="//www.youtube.com/iframe_api"></script>
+<style type="text/css">
+#player1, #player2, #player3 {
+    background: #000;
+    width: 500px;
+    height: 500px;
+}
+</style>
+</head>
+<body>
+
+    <div id="player1"></div>
+    <div id="player2"></div>
+    <div id="player3"></div>
+
+    <script>
+    YUI().use("youtube-iframe", function (Y) {
+        (new Y.YoutubeIframe({
+            url: "https://www.youtube.com/watch?v=u4IdoBU1uKE",
+            container: "#player1",
+            autoPlay: true
+        }));
+        (new Y.YoutubeIframe({
+            url: "https://www.youtube.com/watch?v=u4IdoBU1uKE",
+            container: "#player2",
+            autoPlay: true
+        }));
+        (new Y.YoutubeIframe({
+            url: "https://www.youtube.com/watch?v=u4IdoBU1uKE",
+            container: "#player3"
+        }));
+    });
+    </script>
+
+</body>
+</html>
