@@ -7,7 +7,7 @@
  */
 YUI.add("youtube-iframe", function (Y) {
 
-    var MODULE_ID = "Y.YoutubeIframe",
+    var MODULE_ID = "youtube-iframe",
         _getParameter,
         _log;
 
@@ -17,7 +17,7 @@ YUI.add("youtube-iframe", function (Y) {
         Y.log(message, type, module);
     };
     _getParameter = function (url, key) {
-        _log("get vid is executed.");
+        _log("_getParameter() is executed.");
         var urls, queryString;
         urls = url.split("?");
         if (urls.length >= 2) {
@@ -47,6 +47,9 @@ YUI.add("youtube-iframe", function (Y) {
      * @property STATE
      */
     YoutubeIframe.STATE = [
+        "initializing",
+        "ready",
+        "idle",
         "buffering",
         "playing",
         "paused",
@@ -99,7 +102,7 @@ YUI.add("youtube-iframe", function (Y) {
          * @type String
          */
         "state" : {
-            value: "idle",
+            value: "initializing",
             readOnly: true
         },
         /**
@@ -124,7 +127,7 @@ YUI.add("youtube-iframe", function (Y) {
         },
         /**
          * The iframe instance is installed in browser.
-         *
+         * For extension, not yet impelement.
          * @attribute installed
          * @type Boolean
          */
@@ -173,9 +176,6 @@ YUI.add("youtube-iframe", function (Y) {
             value: 100,
             getter: function () {
                 return this.get("instance").getVolume();
-            },
-            setter: function (value) {
-                this.get("instance").setVolume(value);
             }
         },
         /**
@@ -190,13 +190,13 @@ YUI.add("youtube-iframe", function (Y) {
         },
         /**
          *
-         *
+         * For extension.
          * @attribute mode
-         * @type boolean
+         * @type integer
          */
-        "fullscreen": {
-            value: false,
-            validator: Y.Lang.isBoolean,
+        "mode": {
+            value: 0,
+            validator: Y.Lang.isInteger,
             setter: function (value) {
                 return value;
             }
@@ -255,7 +255,7 @@ YUI.add("youtube-iframe", function (Y) {
          /**
         *   2  The request contains an invalid parameter value.
         *   5  The requested content cannot be played in an HTML5 player or another error related to the HTML5 player has occurred.
-        *   100  The video requested was not found. 
+        *   100  The video requested was not found.
         *   101  The owner of the requested video does not allow it to be played in embedded players.
         *   150  This error is the same as 101. It's just a 101 error in disguise!
         */
@@ -273,7 +273,7 @@ YUI.add("youtube-iframe", function (Y) {
             var that = this;
             _log("_handlePlayerReady() is executed");
             if (that.get("instance")) {
-                //that.get("instance").playVideo();
+                that._set("state", "ready");
                 that._set("instance", e.target);
                 that.fire("ready");
                 if (that.get("autoPlay")) {
@@ -296,7 +296,7 @@ YUI.add("youtube-iframe", function (Y) {
             _log("onPlayerStateChange() is executed :" + state);
             switch (state) {
             case YT.PlayerState.PLAYING:
-                that.fire("playing");         // fire play
+                //that.fire("playing");         // fire play
                 that._set("state", "playing");
                 that._set("resolution", that.get("instance").getPlaybackQuality());
                 that._set("instance", e.target);
@@ -307,16 +307,22 @@ YUI.add("youtube-iframe", function (Y) {
                 that._set("state", "ended");
                 break;
             case YT.PlayerState.BUFFERING:
-                that.fire("buffering");           // fire buffering
+               // that.fire("buffering");           // fire buffering
                 that._set("state", "buffering");
                 break;
             case YT.PlayerState.PAUSED:
-                that.fire("paused");           // fire buffering
+               // that.fire("paused");           // fire buffering
                 that._set("state", "paused");
                 break;
             }
         },
 
+        _defResolutionFn : function (e, data) {
+            this.get("instance").setPlaybackQuality(data.value);
+        },
+        _defVolumeFn : function (e, data) {
+            this.get("instance").setVolume(data.value);
+        },
         initializer : function (config) {
             _log("initializer() is executed");
             var that = this,
@@ -333,6 +339,8 @@ YUI.add("youtube-iframe", function (Y) {
             if (config.size) {
                 that._set("size", config.size);
             }
+            that.on("resolutionChange", that._defResolutionFn);
+            that.on("volumeChange", that._defVolumeFn);
             that._set("hasControl", config.hasControl || false);
             that.publish("error", {
                 emitFacade: true
@@ -382,6 +390,9 @@ YUI.add("youtube-iframe", function (Y) {
             _log("play() is executed.");
             var that = this,
                 instance = that.get("instance");
+            if (that.get("ready") !== "ready") {
+                return;
+            }
             url = url || that.get("url");
             that._set("state", "play");
             if (!url) {
@@ -399,6 +410,9 @@ YUI.add("youtube-iframe", function (Y) {
             _log("stop() is executed.");
             var that = this,
                 instance = that.get("instance");
+            if (that.get("ready") !== "playing") {
+                return;
+            }
             instance.stopVideo();
             if (that._playTimer) {
                 that._playTimer.cancel();
@@ -442,7 +456,7 @@ YUI.add("youtube-iframe", function (Y) {
             _log("mute() is executed.");
             var that = this,
                 instance = that.get("instance");
-            if (that._paused) {
+            if (instance.isMuted() || that._paused) {
                 Y.log("mute() - The player has already been mute.", "warn", MODULE_ID);
                 return;
             }
