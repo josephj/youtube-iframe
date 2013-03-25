@@ -190,7 +190,7 @@ YUI.add("youtube-iframe", function (Y) {
         },
         /**
          *
-         * For extension.
+         * For extension. 
          * @attribute mode
          * @type integer
          */
@@ -255,7 +255,7 @@ YUI.add("youtube-iframe", function (Y) {
          /**
         *   2  The request contains an invalid parameter value.
         *   5  The requested content cannot be played in an HTML5 player or another error related to the HTML5 player has occurred.
-        *   100  The video requested was not found.
+        *   100  The video requested was not found. 
         *   101  The owner of the requested video does not allow it to be played in embedded players.
         *   150  This error is the same as 101. It's just a 101 error in disguise!
         */
@@ -296,32 +296,34 @@ YUI.add("youtube-iframe", function (Y) {
             _log("onPlayerStateChange() is executed :" + state);
             switch (state) {
             case YT.PlayerState.PLAYING:
-                //that.fire("playing");         // fire play
                 that._set("state", "playing");
                 that._set("resolution", that.get("instance").getPlaybackQuality());
                 that._set("instance", e.target);
                 that._playTimer = Y.later(1000, that, that._poll, null);
+                that.fire("stateChange", {"newVal": "playing"});         // fire play
                 break;
             case YT.PlayerState.ENDED:
-                that.fire("ended");           // fire ended
                 that._set("state", "ended");
+                that.fire("stateChange", {"prevVal": "playing", "newVal": "ended"});           // fire ended
                 break;
             case YT.PlayerState.BUFFERING:
-               // that.fire("buffering");           // fire buffering
                 that._set("state", "buffering");
+                that.fire("stateChange", {"prevVal": "initializing", "newVal": "buffering"});           // fire ended
                 break;
             case YT.PlayerState.PAUSED:
-               // that.fire("paused");           // fire buffering
                 that._set("state", "paused");
+                that.fire("stateChange", {"prevVal": "playing", "newVal": "paused"});           // fire ended
                 break;
             }
         },
 
-        _defResolutionFn : function (e, data) {
-            this.get("instance").setPlaybackQuality(data.value);
+        _defResolutionFn : function (e) {
+            _log("_defResolutionFn() is executed");
+            this.get("instance").setPlaybackQuality(e.newVal);
         },
-        _defVolumeFn : function (e, data) {
-            this.get("instance").setVolume(data.value);
+        _defVolumeFn : function (e) {
+            _log("_defVolumeFn() is executed");
+            this.get("instance").setVolume(e.newVal);
         },
         initializer : function (config) {
             _log("initializer() is executed");
@@ -390,7 +392,7 @@ YUI.add("youtube-iframe", function (Y) {
             _log("play() is executed.");
             var that = this,
                 instance = that.get("instance");
-            if (that.get("ready") !== "ready") {
+            if (that.get("state") !== "ready") {
                 return;
             }
             url = url || that.get("url");
