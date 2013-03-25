@@ -392,27 +392,24 @@ YUI.add("youtube-iframe", function (Y) {
             _log("play() is executed.");
             var that = this,
                 instance = that.get("instance");
-            if (that.get("state") !== "ready") {
-                return;
-            }
             url = url || that.get("url");
-            that._set("state", "play");
             if (!url) {
                 _log("You must provide either url argument or url attribute.", "error");
             } else {
                 that._set("url", url);
             }
             _log("play() - The video URL is " + url);
-            if (instance) {
+            if (instance && instance.loadVideoByUrl) {
                 instance.loadVideoByUrl(Y.Lang.sub(YoutubeIframe.YOUTUBE_URL, {vid: _getParameter(url, "v")}));
+            } else {
+                that._create();
             }
-            that._create();
         },
         stop: function () {
             _log("stop() is executed.");
             var that = this,
                 instance = that.get("instance");
-            if (that.get("ready") !== "playing") {
+            if (that.get("state") !== "playing") {
                 return;
             }
             instance.stopVideo();
