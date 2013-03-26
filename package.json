@@ -10,8 +10,7 @@
         "node": ">=0.4.0"
     },
     "devDependencies": {
-        "grover": "*",
-        "yui": "*"
+        "grover": "*"
     },
     "repository": {
         "type": "git",
