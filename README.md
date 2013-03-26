@@ -1,11 +1,13 @@
 youtube-iframe
 ==============
 
+![Build Status](https://api.travis-ci.org/miiicasa/youtube-iframe.png?branch=master)
+
 We design this utility to help Youtube iframe plugin with YUI wrapper.
 
 How to use.
 -------
-1. Add youtube iframe script 
+1. Add youtube iframe script
 ~~~~
 <script type="text/javascript" src="//www.youtube.com/iframe_api"></script>
 ~~~~
@@ -17,17 +19,17 @@ var config       = {
     "container": "#yt",  // HTML selector, it can be id, class or html tag name (like body)
     "size": ["1280px","780px"],  //width, height in px
     "hasControl": true,          //show control?
-    "autoPlay": false,			 //auto play or not
+    "autoPlay": false,                   //auto play or not
     "url": "http://www.youtube.com/watch?v=faVCwOesYl8" //youtube url
 };
 var player          = new Y.YoutubeIframe(config);
-	</code></pre>
+        </code></pre>
 
 3. Play youtube video with an existed player.
 
 <pre><code>
 player.play("http://www.youtube.com/watch?v=faVCwOesYl8");
-	</code></pre>
+        </code></pre>
 
 4. Listen event
 
@@ -39,6 +41,6 @@ player.on("playing", function (e) {
 });
 player.on("ended", _handleEnded);
 player.on("error", _handleError);
-	</code></pre>
+        </code></pre>
 
 Reference: https://developers.google.com/youtube/iframe_api_reference
