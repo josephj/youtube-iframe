@@ -347,7 +347,6 @@ YUI.add("youtube-iframe", function (Y) {
 
             config = config || {};
             container = config.container || "body";
-            debugger;
             position = config.position || 0;
             that._set("position", position);
             container = Y.one(container);
