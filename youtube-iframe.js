@@ -144,13 +144,11 @@ YUI.add("youtube-iframe", function (Y) {
          * @type Number
          */
         "position": {
-            value: null,
+            value: 0,
             getter: function () {
-                return this.get("instance").getCurrentTime();
-            },
-            setter: function (value) {
-                this.get("instance").seekTo(value);
-                return value;
+                if (this.get("instance") && this.get("instance").getCurrentTime()) {
+                    return this.get("instance").getCurrentTime();
+                }
             },
             validator: Y.Lang.isNumber
         },
@@ -163,7 +161,11 @@ YUI.add("youtube-iframe", function (Y) {
         "duration": {
             value: null,
             getter: function () {
-                return this.get("instance").getDuration();
+                if (this.get("instance") && this.get("instance").getDuration()) {
+                    return this.get("instance").getDuration();
+                } else {
+                    return null;
+                }
             },
             readOnly: true
         },
@@ -175,7 +177,11 @@ YUI.add("youtube-iframe", function (Y) {
         "volume": {
             value: 100,
             getter: function () {
-                return this.get("instance").getVolume();
+                if (this.get("instance") && this.get("instance").getVolume()) {
+                    return this.get("instance").getVolume();
+                } else {
+                    return null;
+                }
             }
         },
         /**
@@ -279,6 +285,9 @@ YUI.add("youtube-iframe", function (Y) {
                 if (that.get("autoPlay")) {
                     e.target.playVideo();
                 }
+                if (that.get("position") !== 0) {
+                    e.target.seekTo(that.get("position"));
+                }
             }
         },
         /**
@@ -316,7 +325,10 @@ YUI.add("youtube-iframe", function (Y) {
                 break;
             }
         },
-
+        _defPositionFn : function (e) {
+            _log("_defPositionFn() is executed");
+            this.get("instance").seekTo(e.newVal);
+        },
         _defResolutionFn : function (e) {
             _log("_defResolutionFn() is executed");
             this.get("instance").setPlaybackQuality(e.newVal);
@@ -330,10 +342,13 @@ YUI.add("youtube-iframe", function (Y) {
             var that = this,
                 url,
                 hasControl,
+                position,
                 container;
 
             config = config || {};
             container = config.container || "body";
+            position = config.position || 0;
+            that._set("position", position);
             container = Y.one(container);
             that._set("container", container);
             url = config.url || null;
@@ -353,7 +368,9 @@ YUI.add("youtube-iframe", function (Y) {
             that.publish("playing", {
                 emitFacade: true
             });
-            that._create();
+            if (url) {
+                that._create();
+            }
         },
         _create: function () {
             _log("_create() is executed.");
