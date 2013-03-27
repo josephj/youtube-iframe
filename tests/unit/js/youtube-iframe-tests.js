@@ -1,3 +1,4 @@
+/*global window, YUI, YT, document */
 YUI.add("youtube-iframe-tests", function (Y) {
 
     var Assert = Y.Assert,
@@ -42,12 +43,13 @@ YUI.add("youtube-iframe-tests", function (Y) {
             this.player = new Y.YoutubeIframe({
                 "container": "#container"
             });
+
             Assert.isTrue(this.player instanceof Y.YoutubeIframe);
         },
         "instance should be rendered without autoPlay attribute": function () {
             this.player = new Y.YoutubeIframe({
                 "container": "#container",
-                 "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
+                "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
             });
             Assert.isTrue(this.player instanceof Y.YoutubeIframe);
         },
@@ -101,7 +103,7 @@ YUI.add("youtube-iframe-tests", function (Y) {
         },
         "position could be configured at initialization": function () {
             var that = this,
-                expected = 3000;
+                expected = 3;
             that.player = createPlayer({
                 "container": "#container",
                 "autoPlay": true,
@@ -121,14 +123,14 @@ YUI.add("youtube-iframe-tests", function (Y) {
             Assert.areEqual(expected, _player.get("position"));
         },
         "position should not equal to zero after playing for 3 secs": function () {
-            this.player = createPlayer();
+            this.player = createPlayer({"autoPlay": false});
             this.player.on("ready", function () {
                 this.resume();
                 this.wait(function () {
                     Assert.areNotEqual(0, this.player.get("position"));
                 }, 3000);
             }, this);
-            this.wait();
+            this.wait(1000);
         },
         "size of container should be equal to size attribute": function () {
             var width,
@@ -149,7 +151,7 @@ YUI.add("youtube-iframe-tests", function (Y) {
             this.player = createPlayer();
             Assert.areEqual("initializing", this.player.get("state"));
         },
-        "state should be 'buffering' immediately after player is ready": function () {
+        "state should be 'ready' immediately after player is ready": function () {
             var that = this;
             that.player = new Y.YoutubeIframe({
                 "container": "#container",
@@ -158,20 +160,23 @@ YUI.add("youtube-iframe-tests", function (Y) {
             });
             that.player.on("ready", function () {
                 that.resume(function () {
-                    Assert.areEqual("buffering", that.player.get("state"));
+                    Assert.areEqual("ready", that.player.get("state"));
                 });
             });
             that.wait();
         },
         "state should be 'paused' after pause method executes": function () {
+            var that = this;
             _player.pause();
             Assert.areEqual("paused", _player.get("state"));
         },
         "state should be 'playing' after play method executes after paused": function () {
-            _player.play();
+            var that = this;
+            _player.resume();
             Assert.areEqual("playing", _player.get("state"));
         },
         "state should be 'stopped' after stop method executes": function () {
+            var that = this;
             _player.stop();
             Assert.areEqual("stopped", _player.get("state"));
         },
@@ -182,7 +187,7 @@ YUI.add("youtube-iframe-tests", function (Y) {
         "url should be updated after play method executes": function () {
             var expected = "http://www.youtube.com/watch?v=u1zgFlCw8Aw";
             _player.play(expected);
-            Assert.areEqual(expected, _player.get("url"))
+            Assert.areEqual(expected, _player.get("url"));
         }
     }));
 
