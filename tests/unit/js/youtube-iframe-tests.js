@@ -112,25 +112,37 @@ YUI.add("youtube-iframe-tests", function (Y) {
             });
             that.player.on("playing", function () {
                 this.resume(function () {
-                    Assert.areEqual(expected, that.player.get("position"));
+                    Assert.isTrue(that.player.get("position") >= expected);
                 });
             }, that);
             that.wait();
         },
         "position should be updated by setting position attribute": function () {
-            var expected = 1000;
-            _player.set("position", expected);
-            Assert.areEqual(expected, _player.get("position"));
+            var that = this,
+                expected = 3;
+            that.player = createPlayer({
+                "container": "#container",
+                "autoPlay": true,
+                "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
+            });
+            that.player.on("ready", function () {
+                that.player._set("position", expected);
+            }, that);
+            that.player.on("playing", function () {
+                this.resume(function () {
+                    Assert.isTrue(this.player.get("position") >= expected);
+                });
+            }, that);
+            that.wait();
         },
         "position should not equal to zero after playing for 3 secs": function () {
-            this.player = createPlayer({"autoPlay": false});
-            this.player.on("ready", function () {
-                this.resume();
-                this.wait(function () {
+            this.player = createPlayer({"autoPlay": true});
+            this.player.on("playing", function () {
+                this.resume(function () {
                     Assert.areNotEqual(0, this.player.get("position"));
-                }, 3000);
+                });
+                this.wait(3000);
             }, this);
-            this.wait(1000);
         },
         "size of container should be equal to size attribute": function () {
             var width,

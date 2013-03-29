@@ -28,14 +28,14 @@
             "container": "#yt",
             "autoPlay": true,
             "hasControl": true,
-            "position": 3,
             "url": "https://www.youtube.com/watch?v=pg1lpgdTRuo"
         };
 
         yt = new Y.YoutubeIframe(config);
-        
-        setTimeout("yt.stop()", 5000);
-
+        yt.on("playing", function () {
+            this._set("position", 3);
+            console.log(">>>>>"+this.get("position"));
+        });
     });
     </script>
 </body>

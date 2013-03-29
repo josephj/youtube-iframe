@@ -138,7 +138,18 @@ YUI.add("youtube-iframe", function (Y) {
             }
         },
         /**
-         * The iframe input instance's position (current playing time in milli second) .
+         * The iframe instance's start position (current playing time in second) .
+         *
+         * @attribute startPosition
+         * @type Number
+         */
+        "startPosition": {
+            value: 0,
+            writeOnce: true,
+            validator: Y.Lang.isNumber
+        },
+        /**
+         * The iframe input instance's position (current playing time in second) .
          *
          * @attribute position
          * @type Number
@@ -146,7 +157,7 @@ YUI.add("youtube-iframe", function (Y) {
         "position": {
             value: 0,
             getter: function () {
-                if (this.get("instance") && this.get("instance").getCurrentTime()) {
+                if (this.get("instance") && this.get("instance").getCurrentTime) {
                     return this.get("instance").getCurrentTime();
                 }
             },
@@ -282,11 +293,11 @@ YUI.add("youtube-iframe", function (Y) {
                 that._set("state", "ready");
                 that._set("instance", e.target);
                 that.fire("ready");
+                if (that.get("startPosition") !== 0) {
+                    e.target.seekTo(that.get("startPosition"));
+                }
                 if (that.get("autoPlay")) {
                     e.target.playVideo();
-                }
-                if (that.get("position") !== 0) {
-                    e.target.seekTo(that.get("position"));
                 }
             }
         },
@@ -348,7 +359,7 @@ YUI.add("youtube-iframe", function (Y) {
             config = config || {};
             container = config.container || "body";
             position = config.position || 0;
-            that._set("position", position);
+            that._set("startPosition", position);
             container = Y.one(container);
             that._set("container", container);
             url = config.url || null;
@@ -356,6 +367,9 @@ YUI.add("youtube-iframe", function (Y) {
             if (config.size) {
                 that._set("size", config.size);
             }
+
+            
+            that.on("positionChange", that._defPositionFn);
             that.on("resolutionChange", that._defResolutionFn);
             that.on("volumeChange", that._defVolumeFn);
             that._set("hasControl", config.hasControl || false);
@@ -410,6 +424,7 @@ YUI.add("youtube-iframe", function (Y) {
             var that = this,
                 instance = that.get("instance");
             url = url || that.get("url");
+            that._set("state", "play");
             if (!url) {
                 _log("You must provide either url argument or url attribute.", "error");
             } else {
