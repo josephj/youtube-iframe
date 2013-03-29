@@ -84,7 +84,7 @@ YUI.add("youtube-iframe-tests", function (Y) {
                     Assert.areEqual(beforeValue, afterValue);
                 });
             });
-            that.wait(5000);
+            that.wait(15000);
         },
         "duration should not equal to zero after state changes to 'playing'": function () {
             Assert.isTrue(_player.get("duration") > 0);
@@ -95,7 +95,7 @@ YUI.add("youtube-iframe-tests", function (Y) {
                 this.resume();
                 Assert.pass();
             }, this);
-            this.wait(5000);
+            this.wait(15000);
         },
         "mode should always be 0": function () {
             this.player = createPlayer();
@@ -115,7 +115,7 @@ YUI.add("youtube-iframe-tests", function (Y) {
                     Assert.isTrue(that.player.get("position") >= expected);
                 });
             }, that);
-            that.wait(5000);
+            that.wait(15000);
         },
         "position should be updated by setting position attribute": function () {
             var that = this,
@@ -133,7 +133,7 @@ YUI.add("youtube-iframe-tests", function (Y) {
                     Assert.isTrue(this.player.get("position") >= expected);
                 });
             }, that);
-            that.wait(5000);
+            that.wait(15000);
         },
         "position should not equal to zero after playing for 3 secs": function () {
             this.player = createPlayer({"autoPlay": true});
@@ -141,7 +141,7 @@ YUI.add("youtube-iframe-tests", function (Y) {
                 this.resume(function () {
                     Assert.areNotEqual(0, this.player.get("position"));
                 });
-                this.wait(5000);
+                this.wait(15000);
             }, this);
         },
         "size of container should be equal to size attribute": function () {
@@ -175,7 +175,7 @@ YUI.add("youtube-iframe-tests", function (Y) {
                     Assert.areEqual("ready", that.player.get("state"));
                 });
             });
-            that.wait(5000);
+            that.wait(15000);
         },
         "state should be 'paused' after pause method executes": function () {
             var that = this;
