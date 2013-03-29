@@ -372,9 +372,6 @@ YUI.add("youtube-iframe", function (Y) {
             that.publish("error", {
                 emitFacade: true
             });
-            that.publish("play", {
-                emitFacade: true
-            });
             that.publish("playing", {
                 emitFacade: true
             });
