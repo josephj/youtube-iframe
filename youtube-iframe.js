@@ -320,19 +320,15 @@ YUI.add("youtube-iframe", function (Y) {
                 that._set("resolution", that.get("instance").getPlaybackQuality());
                 that._set("instance", e.target);
                 that._playTimer = Y.later(1000, that, that._poll, null);
-                that.fire("stateChange", {"newVal": "playing"});         // fire play
                 break;
             case YT.PlayerState.ENDED:
                 that._set("state", "ended");
-                that.fire("stateChange", {"prevVal": "playing", "newVal": "ended"});           // fire ended
                 break;
             case YT.PlayerState.BUFFERING:
                 that._set("state", "buffering");
-                that.fire("stateChange", {"prevVal": "initializing", "newVal": "buffering"});           // fire ended
                 break;
             case YT.PlayerState.PAUSED:
                 that._set("state", "paused");
-                that.fire("stateChange", {"prevVal": "playing", "newVal": "paused"});           // fire ended
                 break;
             }
         },
