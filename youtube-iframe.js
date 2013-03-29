@@ -207,7 +207,7 @@ YUI.add("youtube-iframe", function (Y) {
         },
         /**
          *
-         * For extension. 
+         * For extension.
          * @attribute mode
          * @type integer
          */
@@ -272,7 +272,7 @@ YUI.add("youtube-iframe", function (Y) {
          /**
         *   2  The request contains an invalid parameter value.
         *   5  The requested content cannot be played in an HTML5 player or another error related to the HTML5 player has occurred.
-        *   100  The video requested was not found. 
+        *   100  The video requested was not found.
         *   101  The owner of the requested video does not allow it to be played in embedded players.
         *   150  This error is the same as 101. It's just a 101 error in disguise!
         */
@@ -368,7 +368,7 @@ YUI.add("youtube-iframe", function (Y) {
                 that._set("size", config.size);
             }
 
-            
+
             that.on("positionChange", that._defPositionFn);
             that.on("resolutionChange", that._defResolutionFn);
             that.on("volumeChange", that._defVolumeFn);
@@ -515,8 +515,10 @@ YUI.add("youtube-iframe", function (Y) {
                     that._playTimer = null;
                 }
             }
-            instance.destroy();
-            instance = null;
+            if (instance) {
+                instance.destroy();
+                instance = null;
+            }
         }
     });
     Y.YoutubeIframe = YoutubeIframe;
