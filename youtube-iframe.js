@@ -7,15 +7,61 @@
  */
 YUI.add("youtube-iframe", function (Y) {
 
-    var MODULE_ID = "youtube-iframe",
+    var _isLoading = false, // Indicates whether the Iframe API is being loaded.
+        Lang = Y.Lang,
+        //=================
+        // Constants
+        //=================
+        IFRAME_API_SRC = "https://www.youtube.com/iframe_api",
+        MODULE_ID = "youtube-iframe",
+        //=================
+        // Private Methods
+        //=================
         _getParameter,
+        _loadAPI,
+        _loadAPICallback,
         _log;
+
+    /**
+     * Loads IFrame Player API asynchronously.
+     */
+    _loadAPI = function () {
+        _log("_loadAPI() is executed().");
+        var that = this;
+        // Resumes _create method when API is loaded.
+        window.onYouTubeIframeAPIReady = function () {
+            that._create();
+        };
+        Y.Get.js(IFRAME_API_SRC, {context: that}, _loadAPICallback);
+        _isLoading = true;
+    };
+
+    /**
+     * Callback of _loadAPI method.
+     */
+    _loadAPICallback = function (err) {
+        _log("_loadAPICallback() is executed.");
+        var that = this;
+        _isLoading = false;
+        if (err) {
+            _log("_loadAPICallback() It fails loading.");
+            that.destroy();
+            Y.error("Error loading JS: " + err[0].error, err, {
+                "module" : "youtube-iframe",
+                "fnName" : "_create",
+                "continue" : false
+            });
+            return;
+        }
+        _log("_loadAPICallback() It loads successfully.");
+    };
 
     _log = function (message, type, module) {
         type = type || "info";
         module = module || MODULE_ID;
         Y.log(message, type, module);
     };
+
     _getParameter = function (url, key) {
         _log("_getParameter() is executed.");
         var urls, queryString;
@@ -25,6 +71,7 @@ YUI.add("youtube-iframe", function (Y) {
             return queryString[key];
         }
     };
+
     /**
      * An utility for youtube iframe API control.
      * The following is sample usage.
@@ -62,7 +109,6 @@ YUI.add("youtube-iframe", function (Y) {
     YoutubeIframe.CHECK_RETRY    = 3;
     YoutubeIframe.CHECK_INTERVAL = 1000;
     YoutubeIframe.POLL_INTERVAL  = 1000;
-    YoutubeIframe.INSTALLED      = true;
     YoutubeIframe.YOUTUBE_URL    = "http://www.youtube.com/v/{vid}?version=3";
     YoutubeIframe.ATTRS = {
         /**
@@ -126,15 +172,17 @@ YUI.add("youtube-iframe", function (Y) {
             validator: Y.Lang.isBoolean
         },
         /**
-         * The iframe instance is installed in browser.
-         * For extension, not yet impelement.
+         * Indicates if IFrame API has installed.
+         *
          * @attribute installed
          * @type Boolean
          */
         "installed": {
-            value: null,
+            valueFn: function () {
+                return !(Lang.isUndefined(window.YT));
+            },
             getter: function () {
-                return YoutubeIframe.INSTALLED;
+                return !(Lang.isUndefined(window.YT));
             }
         },
         /**
@@ -381,6 +429,7 @@ YUI.add("youtube-iframe", function (Y) {
         },
         _create: function () {
             _log("_create() is executed.");
+
             var that = this,
                 container = that.get("container"),
                 size = that.get("size"),
@@ -389,6 +438,19 @@ YUI.add("youtube-iframe", function (Y) {
                 ytPlayer,
                 nodeId,
                 instance = that.get("instance") || null;
+
+            // Tries later if it still loads IFrame Player API code.
+            if (_isLoading) {
+                Y.later(500, that, that._create);
+                return;
+            }
+
+            // Loads Iframe Player API code if global variable YT doesn't exist.
+            if (!that.get("installed")) {
+                _loadAPI.call(this);
+                _isLoading = true;
+                return;
+            }
 
             if (!container.hasAttribute("id")) {
                 container.setAttribute("id", Y.guid());
@@ -519,6 +581,7 @@ YUI.add("youtube-iframe", function (Y) {
     "group"    : "mui",
     "js"       : "youtube-iframe/youtube-iframe.js",
     "requires" : [
+        "get",
         "base",
         "node",
         "querystring",
