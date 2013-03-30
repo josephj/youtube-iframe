@@ -9,19 +9,19 @@ YUI.add("youtube-iframe-tests", function (Y) {
     createPlayer = function (o) {
         o = o || {};
         var attrs = {
-            "container": "#container",
             "autoPlay": true,
-            "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
+            "url": "http://www.youtube.com/watch?v=faVCwOesYl8",
+            "size": ["200px", "200px"]
         };
         return new Y.YoutubeIframe(Y.merge(attrs, o));
     };
 
     _player = new Y.YoutubeIframe({
-        "container": "#container2",
         "autoPlay": true,
         "url": "https://www.youtube.com/watch?v=pg1lpgdTRuo",
-        "size": ["400px", "300px"]
+        "size": ["200px", "200px"]
     });
+
 
     suite.add(new Y.Test.Case({
         name: "Y.YoutubeIframe",
@@ -41,33 +41,29 @@ YUI.add("youtube-iframe-tests", function (Y) {
         //======================
         "instance should be rendered without url attribute": function () {
             this.player = new Y.YoutubeIframe({
-                "container": "#container"
+                "size": ["200px", "200px"]
             });
-
             Assert.isTrue(this.player instanceof Y.YoutubeIframe);
         },
         "instance should be rendered without autoPlay attribute": function () {
             this.player = new Y.YoutubeIframe({
-                "container": "#container",
+                "size": ["200px", "200px"],
                 "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
             });
             Assert.isTrue(this.player instanceof Y.YoutubeIframe);
         },
         "instance should be an YT.Player instance": function () {
-            this.player = new Y.YoutubeIframe({
-                "container": "#container",
-                "size": ["100px", "100px"],
+            var that = this;
+            that.player = new Y.YoutubeIframe({
+                "size": ["200px", "200px"],
                 "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
             });
-            Assert.isTrue(this.player.get("instance") instanceof YT.Player);
-        },
-        "container should be converted to iframe": function () {
-            this.player = new Y.YoutubeIframe({
-                "container": "#container",
-                "size": ["100px", "100px"],
-                "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
-            });
-            Assert.isTrue(Y.one("#container").get("nodeName").toLowerCase() === "iframe");
+            that.player.on("ready", function () {
+                that.resume(function () {
+                    Assert.isTrue(that.player.get("instance") instanceof YT.Player);
+                });
+            }, that);
+            that.wait();
         },
         "duration should be readOnly": function () {
             var that = this;
@@ -84,7 +80,7 @@ YUI.add("youtube-iframe-tests", function (Y) {
                     Assert.areEqual(beforeValue, afterValue);
                 });
             });
-            that.wait(5000);
+            that.wait();
         },
         "duration should not equal to zero after state changes to 'playing'": function () {
             Assert.isTrue(_player.get("duration") > 0);
@@ -105,13 +101,13 @@ YUI.add("youtube-iframe-tests", function (Y) {
             var that = this,
                 expected = 3;
             that.player = createPlayer({
-                "container": "#container",
                 "autoPlay": true,
+                "size": ["200px", "200px"],
                 "position": expected,
                 "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
             });
             that.player.on("playing", function () {
-                this.resume(function () {
+                that.resume(function () {
                     Assert.isTrue(that.player.get("position") >= expected);
                 });
             }, that);
@@ -121,43 +117,52 @@ YUI.add("youtube-iframe-tests", function (Y) {
             var that = this,
                 expected = 3;
             that.player = createPlayer({
-                "container": "#container",
                 "autoPlay": true,
+                "size": ["200px", "200px"],
                 "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
             });
             that.player.on("ready", function () {
                 that.player._set("position", expected);
             }, that);
             that.player.on("playing", function () {
-                this.resume(function () {
-                    Assert.isTrue(this.player.get("position") >= expected);
+                that.resume(function () {
+                    Assert.isTrue(that.player.get("position") >= expected);
                 });
             }, that);
             that.wait(5000);
         },
         "position should not equal to zero after playing for 3 secs": function () {
-            this.player = createPlayer({"autoPlay": true});
-            this.player.on("playing", function () {
-                this.resume(function () {
-                    Assert.areNotEqual(0, this.player.get("position"));
+            var that = this;
+            that.player = createPlayer({"autoPlay": true});
+            that.player.on("playing", function () {
+                that.resume(function () {
+                    Assert.areNotEqual(0, that.player.get("position"));
                 });
-                this.wait(5000);
-            }, this);
+            });
+            that.wait(5000);
         },
         "size of container should be equal to size attribute": function () {
-            var width,
+            var that = this,
+                id,
+                width,
                 height,
                 node;
 
-            this.player = new Y.YoutubeIframe({
-                "container": "#container",
-                "size": ["100px", "100px"],
+            that.player = new Y.YoutubeIframe({
+                "container": "#test-size",
+                "size": ["200px", "200px"],
                 "url": "http://www.youtube.com/watch?v=faVCwOesYl8"
             });
-            node = Y.one("#container");
-            width = node.get("offsetWidth") + "px";
-            height = node.get("offsetHeight") + "px";
-            Assert.areEqual("100px,100px", width + "," + height);
+            that.player.on("ready", function () {
+                that.resume(function () {
+                    id = that.player.get("container").get("id");
+                    node = document.getElementById(id);
+                    width = node.offsetWidth + "px";
+                    height = node.offsetHeight + "px";
+                    Assert.areEqual("200px,200px", width + "," + height);
+                });
+            });
+            that.wait();
         },
         "state should be 'initializing' at the beginning": function () {
             this.player = createPlayer();

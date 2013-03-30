@@ -395,17 +395,31 @@ YUI.add("youtube-iframe", function (Y) {
         initializer : function (config) {
             _log("initializer() is executed");
             var that = this,
+                id,
                 url,
                 hasControl,
                 position,
                 container;
 
             config = config || {};
-            container = config.container || "body";
+            if (Y.one(config.container)) {
+                container = Y.one(config.container);
+            } else {
+                if (
+                    Lang.isString(config.container) &&
+                    config.container.indexOf("#") === 0
+                ) {
+                    id = config.container.split("#")[1];
+                } else {
+                    id = Y.guid();
+                }
+                container = Y.Node.create('<div id="' + id + '"/>');
+                Y.one("body").append(container);
+                container.generateID();
+            }
+            that._set("container", container);
             position = config.position || 0;
             that._set("startPosition", position);
-            container = Y.one(container);
-            that._set("container", container);
             url = config.url || null;
             that._set("url", url);
             if (config.size) {
@@ -433,8 +447,8 @@ YUI.add("youtube-iframe", function (Y) {
             var that = this,
                 container = that.get("container"),
                 size = that.get("size"),
-                width = size[0],
-                height = size[1],
+                width = parseInt(size[0], 10),
+                height = parseInt(size[1], 10),
                 ytPlayer,
                 nodeId,
                 instance = that.get("instance") || null;
@@ -452,12 +466,7 @@ YUI.add("youtube-iframe", function (Y) {
                 return;
             }
 
-            if (!container.hasAttribute("id")) {
-                container.setAttribute("id", Y.guid());
-                nodeId =  Y.guid();
-            } else {
-                nodeId = container.getAttribute("id");
-            }
+            nodeId = container.get("id");
             if (!instance) {
                 ytPlayer = new YT.Player(nodeId, {
                     height: height,
@@ -470,7 +479,6 @@ YUI.add("youtube-iframe", function (Y) {
                         "onError" : Y.bind(that._handleError, that)
                     }
                 });
-                //console.log(ytPlayer.getCurrentTime());//.setPlaybackQuality("highres");
                 that._set("instance", ytPlayer);
             }
         },
