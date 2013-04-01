@@ -7,11 +7,14 @@
  */
 YUI.add("youtube-iframe", function (Y) {
 
+    "use strict";
+
     var _isLoading = false, // Indicates whether the Iframe API is being loaded.
         Lang = Y.Lang,
         //=================
         // Constants
         //=================
+        CLASS_NAME = "yui3-youtube-iframe",
         IFRAME_API_SRC = "https://www.youtube.com/iframe_api",
         MODULE_ID = "youtube-iframe",
         //=================
@@ -220,11 +223,11 @@ YUI.add("youtube-iframe", function (Y) {
         "duration": {
             value: null,
             getter: function () {
+                var result = null;
                 if (this.get("instance") && this.get("instance").getDuration()) {
-                    return this.get("instance").getDuration();
-                } else {
-                    return null;
+                    result = this.get("instance").getDuration();
                 }
+                return result;
             },
             readOnly: true
         },
@@ -236,11 +239,11 @@ YUI.add("youtube-iframe", function (Y) {
         "volume": {
             value: 100,
             getter: function () {
+                var result = null;
                 if (this.get("instance") && this.get("instance").getVolume()) {
-                    return this.get("instance").getVolume();
-                } else {
-                    return null;
+                    result = this.get("instance").getVolume();
                 }
+                return result;
             }
         },
         /**
@@ -282,11 +285,27 @@ YUI.add("youtube-iframe", function (Y) {
     };
 
     Y.extend(YoutubeIframe, Y.Base, {
+        _created    : null,  // Indicates if container is created by this class.
         _mute       : false,
         _paused     : false,
         _playTimer  : null,
+        _createContainer: function (id) {
+            _log("_createContainer() is executed.");
+            var that = this,
+                container;
+            if (Lang.isString(id) && id.indexOf("#") === 0) {
+                id = id.split("#")[1];
+            } else {
+                id = Y.guid();
+            }
+            container = Y.Node.create('<div id="' + id + '"/>');
+            Y.one("body").append(container);
+            that._created = true;
+            return container;
+        },
         _poll: function () {
-            _log("_poll() is executed.");
+            // NOTE - Disables this log because it is too annoying.
+            // _log("_poll() is executed.");
             var that = this,
                 instance = that.get("instance"),
                 state = instance.getPlayerState();
@@ -404,19 +423,11 @@ YUI.add("youtube-iframe", function (Y) {
             config = config || {};
             if (Y.one(config.container)) {
                 container = Y.one(config.container);
-            } else {
-                if (
-                    Lang.isString(config.container) &&
-                    config.container.indexOf("#") === 0
-                ) {
-                    id = config.container.split("#")[1];
-                } else {
-                    id = Y.guid();
-                }
-                container = Y.Node.create('<div id="' + id + '"/>');
-                Y.one("body").append(container);
                 container.generateID();
+            } else {
+                container = that._createContainer(config.container);
             }
+            container.addClass(CLASS_NAME);
             that._set("container", container);
             position = config.position || 0;
             that._set("startPosition", position);
@@ -581,6 +592,9 @@ YUI.add("youtube-iframe", function (Y) {
             if (instance) {
                 instance.destroy();
                 instance = null;
+            }
+            if (that._created) {
+                that.get("container").remove();
             }
         }
     });
